@@ -1,0 +1,177 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: Raw odds data from The Odds API
+    database: odds_api_db  # Will be dynamically set
+    schema: bronze
+    tables:
+      - name: odds_raw
+        description: Raw odds data ingested from The Odds API
+        columns:
+          - name: game_id
+            description: Unique identifier for each game
+            tests:
+              - not_null
+              - unique
+          - name: sport_key
+            description: Sport key from The Odds API (e.g., soccer_epl)
+            tests:
+              - not_null
+          - name: sport_title
+            description: Human-readable sport title
+            tests:
+              - not_null
+          - name: home_team
+            description: Home team name
+            tests:
+              - not_null
+          - name: away_team
+            description: Away team name
+            tests:
+              - not_null
+          - name: commence_time
+            description: UTC timestamp when match starts
+            tests:
+              - not_null
+          - name: bookmaker
+            description: Bookmaker name (filtered to 'betway')
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['betway']
+          - name: market_type
+            description: Type of market (h2h, spreads, totals, etc.)
+            tests:
+              - not_null
+              - accepted_values:
+                  values: ['h2h', 'spreads', 'totals']
+          - name: odds
+            description: Decimal odds value
+            tests:
+              - not_null
+              - dbt_expectations.expect_column_values_to_be_in_set:
+                  value_set: [null]
+                  result_format: complete
+            # Custom test: odds should be > 1.0 and < 10000
+          - name: extracted_at
+            description: Timestamp when data was extracted from API
+            tests:
+              - not_null
+          - name: ingestion_date
+            description: Date when data was ingested to Databricks
+            tests:
+              - not_null
+
+models:
+  # ==================== STAGING MODELS ====================
+  - name: stg_odds_raw
+    description: Cleaned and standardized raw odds data
+    columns:
+      - name: game_id
+        description: Unique game identifier
+        tests:
+          - not_null
+          - unique
+      - name: odds
+        description: Decimal odds value
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1.0
+              max_value: 10000.0
+
+  # ==================== INTERMEDIATE MODELS ====================
+  - name: int_odds_with_margins
+    description: Odds data with calculated implied probabilities and bookmaker margins
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 0
+    columns:
+      - name: game_id
+        description: Unique game identifier
+        tests:
+          - not_null
+      - name: home_win_odds
+        description: Decimal odds for home team victory
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1.0
+              max_value: 100.0
+      - name: away_win_odds
+        description: Decimal odds for away team victory
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1.0
+              max_value: 100.0
+      - name: draw_odds
+        description: Decimal odds for draw
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1.0
+              max_value: 100.0
+      - name: home_win_implied_prob
+        description: Implied probability home team wins (1/odds)
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 1.0
+      - name: bookmaker_margin_h2h
+        description: Bookmaker overround/margin for h2h market
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 0.5  # Margin shouldn't exceed 50%
+
+  # ==================== GOLD LAYER - MARTS ====================
+  - name: fct_daily_odds_summary
+    description: Daily aggregated odds summary for analytics
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 0
+    columns:
+      - name: match_date
+        description: Date of the match
+        tests:
+          - not_null
+      - name: sport_title
+        description: Sport title
+        tests:
+          - not_null
+      - name: total_matches
+        description: Number of matches on this date for this sport
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+      - name: avg_bookmaker_margin
+        description: Average bookmaker margin across all matches
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 0.5
+
+  - name: fct_match_odds
+    description: Detailed match-level odds for analytics
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 0
+    columns:
+      - name: game_id
+        description: Unique match identifier
+        tests:
+          - not_null
+      - name: home_team
+        description: Home team name
+        tests:
+          - not_null
+      - name: away_team
+        description: Away team name
+        tests:
+          - not_null
+      - name: home_win_implied_prob
+        description: Implied probability for home team
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0.0
+              max_value: 1.0
