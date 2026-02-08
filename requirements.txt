@@ -1,0 +1,32 @@
+# Core Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+pyarrow>=10.0.0
+
+# API & HTTP
+requests>=2.28.0
+urllib3>=1.26.0
+
+# Environment Management
+python-dotenv>=1.0.0
+
+# Databricks Integration
+databricks-sql-connector>=3.0.0
+databricks-cli>=0.17.0
+
+# Utilities
+pytz>=2023.0
+python-dateutil>=2.8.0
+tenacity>=8.2.0
+
+# ============================================
+# FOR DOCKER/AIRFLOW PHASE (Install Later)
+# ============================================
+# apache-airflow>=2.7.0
+# apache-airflow-providers-databricks>=4.0.0
+# apache-airflow-providers-docker>=3.8.0
+# dbt-core>=1.7.0
+# dbt-databricks>=1.5.0
+# great-expectations>=0.17.0
+# pydantic>=2.0.0
+

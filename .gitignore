@@ -1,0 +1,104 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+*.env
+*secrets*
+*credentials*
+*token*
+
+# API Keys (CRITICAL!)
+config/api_keys.py
+api_keys.json
+secrets.json
+
+# Airflow
+airflow/logs/
+airflow/*.log
+airflow/*.pid
+airflow/airflow.db
+airflow/unittests.cfg
+airflow/webserver_config.py
+airflow/airflow-webserver.pid
+
+# dbt
+dbt/logs/
+dbt/target/
+dbt/dbt_packages/
+dbt/profiles.yml
+
+# Databricks
+.databrickscfg
+databricks_token.txt
+
+# Data Files
+data/raw/*.csv
+data/processed/*.csv
+data/raw/*.json
+data/processed/*.json
+*.parquet
+*.delta
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+docker/volumes/
+*.log
+
+# SQL
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+~$*
